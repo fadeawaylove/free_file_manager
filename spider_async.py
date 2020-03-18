@@ -17,13 +17,14 @@ loop = asyncio.get_event_loop()
 
 
 class CheChiSpider(object):
+    semaphore = asyncio.Semaphore(10)
     _ssl_context = ssl.create_default_context(cafile=certifi.where())
     http_session = aiohttp.ClientSession(loop=loop)
 
     @classmethod
     async def _get_resp(cls, url, raw=False):
         try:
-            print("aiohttp获取： {}".format(url))
+            print("aiohttp请求： {}".format(url))
             async with cls.http_session.get(url, ssl=cls._ssl_context) as resp:
                 if raw:
                     return await resp.read()
@@ -70,8 +71,7 @@ class CheChiSpider(object):
         """从m3u8的url获取其中的ts文件地址"""
         ts_infos = await cls._get_resp(real_m3url)
         all_ts_path = re.findall(r"(.*?\.ts)", ts_infos)
-        full_all_ts_path = [cls.repalce_url_end_path(
-            real_m3url, x) for x in all_ts_path]
+        full_all_ts_path = [cls.repalce_url_end_path(real_m3url, x) for x in all_ts_path]
         return full_all_ts_path
 
     @classmethod
@@ -88,7 +88,9 @@ class CheChiSpider(object):
         ts_name = "{}.ts".format(ts_index)
         ts_path = os.path.join(tmp_dir, ts_name)
         if not os.path.exists(ts_path):
-            ts_content = await cls._get_resp(ts_url, raw=True)
+             # 限制下载ts文件时候的并发量
+            async with cls.semaphore:
+                ts_content = await cls._get_resp(ts_url, raw=True)
             with open(ts_path, "wb") as f:
                 f.write(ts_content)
         return ts_path
@@ -121,29 +123,27 @@ class CheChiSpider(object):
         return "/".join(a)
 
     @classmethod
-    async def run(cls, video_url, save_dir, semaphore_count=20):
-        semaphore = asyncio.Semaphore(semaphore_count)
-        async with semaphore:
-            # 1、获取原始的m3u8的url地址
-            origin_m3url = await cls.get_origin_m3u8_url_list(video_url)
-            # 2、得到保存ts信息的地址
-            m3u8_tasks = [asyncio.ensure_future(
-                cls.get_real_m3u8_url(u)) for u in origin_m3url]
-            real_m3u8_url_list = await asyncio.gather(*m3u8_tasks)
-            # 3.解析并下载ts文件
-            tmp_dir = os.path.join(save_dir, "tmp")
-            ts_url_tasks = [asyncio.ensure_future(
-                cls.get_ts(u)) for u in real_m3u8_url_list]
-            all_ts_url = await asyncio.gather(*ts_url_tasks)
-            ts_save_tasks = [asyncio.ensure_future(cls._save_all_ts(
-                l, os.path.join(tmp_dir, str(i+1)))) for i, l in enumerate(all_ts_url)]
-            for t in ts_save_tasks:
-                t.add_done_callback(cls._merge_ts_files)
-            await asyncio.gather(*ts_save_tasks)
+    async def run(cls, video_url, save_dir, semaphore_count=10):
+        if semaphore_count:
+            cls.semaphore = asyncio.Semaphore(semaphore_count)
+        # 1、获取原始的m3u8的url地址
+        origin_m3url = await cls.get_origin_m3u8_url_list(video_url)
+        # 2、得到保存ts信息的地址
+        m3u8_tasks = [asyncio.ensure_future(
+            cls.get_real_m3u8_url(u)) for u in origin_m3url]
+        real_m3u8_url_list = await asyncio.gather(*m3u8_tasks)
+        # 3.解析并下载ts文件
+        tmp_dir = os.path.join(save_dir, "tmp")
+        ts_url_tasks = [asyncio.ensure_future(cls.get_ts(u)) for u in real_m3u8_url_list]
+        all_ts_url = await asyncio.gather(*ts_url_tasks)
+        ts_save_tasks = [asyncio.ensure_future(cls._save_all_ts(l, os.path.join(tmp_dir, str(i+1)))) for i, l in enumerate(all_ts_url)]
+        for t in ts_save_tasks:
+            t.add_done_callback(cls._merge_ts_files)
+        await asyncio.gather(*ts_save_tasks)
 
 
 if __name__ == "__main__":
-    scount = 20
+    scount = 10
     fpath = os.getcwd()
     if len(sys.argv) not in (2, 3, 4):
         raise Exception("params count not right, require one or two params.")
