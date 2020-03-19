@@ -26,9 +26,7 @@ class CheChiSpider(object):
         try:
             print("aiohttp请求： {}".format(url))
             async with cls.http_session.get(url, ssl=cls._ssl_context) as resp:
-                if raw:
-                    return await resp.read()
-                data = await resp.text()
+                data = await resp.read() if raw else await resp.text()
                 print("获取成功： {}".format(url))
                 return data
         except:
