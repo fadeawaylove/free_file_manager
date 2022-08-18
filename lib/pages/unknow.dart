@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/constants.dart';
 
 class UnknowPage extends StatelessWidget {
   const UnknowPage({Key? key}) : super(key: key);
@@ -7,7 +8,10 @@ class UnknowPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text("404"),
+        toolbarHeight: defaultAppBarHeight,
+      ),
       body: Center(
           child: Container(
         width: double.infinity,

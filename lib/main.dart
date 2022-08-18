@@ -16,11 +16,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        //   bottomSheetTheme:
-        //       BottomSheetThemeData(backgroundColor: Colors.transparent),
       ),
+      initialRoute: "/home",
       routes: PageRouter.routes,
-      initialRoute: PageRouter.initialRoute,
       onGenerateRoute: PageRouter.generateRoute,
       onUnknownRoute: PageRouter.unknowPageRoute,
     );
