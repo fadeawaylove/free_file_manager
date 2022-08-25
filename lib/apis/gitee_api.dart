@@ -161,7 +161,7 @@ class GiteeApi {
 
   static Future<File> getFileBlobsFile(
       String owner, String repo, String sha) async {
-    // 获取缓存文件对象
+    // 返回文件对象
     LocalFileUtil localFileUtil = LocalFileUtil(repo, sha);
     File cacheFile = await localFileUtil.getFile();
     if (cacheFile.existsSync()) {

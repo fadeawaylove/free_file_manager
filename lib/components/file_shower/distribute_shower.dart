@@ -6,7 +6,7 @@ import 'package:free_file_manager/components/file_shower/pdf_shower.dart';
 import 'package:mime/mime.dart';
 import '/constants.dart';
 import 'base_shower.dart';
-import 'not_support.dart';
+import 'unsupport.dart';
 
 class _DistributeShower extends BaseShower {
   const _DistributeShower({Key? key, required super.fileExplorEntranceArgument})

@@ -9,6 +9,14 @@ abstract class BaseShower extends StatelessWidget {
   final FileExplorEntranceArgument fileExplorEntranceArgument;
   const BaseShower({super.key, required this.fileExplorEntranceArgument});
 
+  bool get isPrivate {
+    return fileExplorEntranceArgument.repoType == "private";
+  }
+
+  bool get isPublic {
+    return fileExplorEntranceArgument.repoType == "public";
+  }
+
   // 展示的widget
   Widget getBuildWidget(dynamic futureData);
 

@@ -8,6 +8,10 @@ String b64utf8decode(String encoded) {
   return base64Coder.decode(encoded);
 }
 
+String utf8decode(List<int> utf8Bytes) {
+  return convert.utf8.decode(utf8Bytes);
+}
+
 // 将base64字符串转为不编码的字符串
 String b64decode(String encoded) {
   var decodeBytes = convert.base64.decode(encoded);

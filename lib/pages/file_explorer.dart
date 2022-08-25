@@ -1,12 +1,6 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:free_file_manager/apis/gitee_api.dart';
-import '../components/file_shower/distribute_shower.dart';
-import '../components/file_shower/image_shower.dart';
-import '../components/file_shower/md_shower.dart';
-import '../components/file_shower/pdf_shower.dart';
-import '/utils/file_util.dart';
+import '/components/file_shower/distribute_shower.dart';
 import '/constants.dart';
 
 class FileExplorerPage extends StatefulWidget {
@@ -85,15 +79,18 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                   return ListTile(
                       leading: itemIcon,
                       onTap: () => Navigator.pushNamed(
-                          context, FileExplorerPage.routeName,
-                          arguments: FileExplorEntranceArgument(
-                              owner: repoInfo.owner,
-                              repo: repoInfo.repo,
-                              sha: item["sha"],
-                              name: item["path"],
-                              type: type,
-                              size: item["size"],
-                              showPath: "$showPath/${item['path']}")),
+                            context,
+                            FileExplorerPage.routeName,
+                            arguments: FileExplorEntranceArgument(
+                                owner: repoInfo.owner,
+                                repo: repoInfo.repo,
+                                sha: item["sha"],
+                                name: item["path"],
+                                type: type,
+                                size: item["size"],
+                                showPath: "$showPath/${item['path']}",
+                                repoType: repoInfo.repoType),
+                          ),
                       title: Text(
                         item['path'],
                       ));

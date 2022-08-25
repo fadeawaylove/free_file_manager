@@ -265,11 +265,14 @@ class _MyHomePageState extends State<MyHomePage> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Container(
-                              margin:
-                                  const EdgeInsets.only(left: 10, right: 10),
+                              margin: const EdgeInsets.only(left: 10),
                               width: 220,
                               height: 40,
                               child: TextField(
+                                onEditingComplete: () {
+                                  setListFutureNotifier(GiteeApi.getAllRepos(
+                                      q: searchTextController.text));
+                                },
                                 textAlignVertical: TextAlignVertical.bottom,
                                 controller: searchTextController,
                                 autofocus: true,
@@ -300,7 +303,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             Container(
                               alignment: Alignment.center,
                               child: SizedBox(
-                                height: 40,
+                                height: 32,
                                 child: ElevatedButton(
                                   style: ButtonStyle(
                                     elevation: MaterialStateProperty.all(0),

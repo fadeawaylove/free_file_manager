@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 class CommonFutureBuilder extends StatelessWidget {
   final Future? future;
   final Function buidWidgetFunction;
-  const CommonFutureBuilder({super.key, this.future, required this.buidWidgetFunction});
+  const CommonFutureBuilder(
+      {super.key, this.future, required this.buidWidgetFunction});
 
   @override
   Widget build(BuildContext context) {
@@ -13,14 +14,16 @@ class CommonFutureBuilder extends StatelessWidget {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return Center(
-              child: Container(
-                  alignment: Alignment.center,
-                  child: const CircularProgressIndicator.adaptive()));
+          return Scaffold(
+              body: Center(
+                  child: Container(
+                      alignment: Alignment.center,
+                      child: const CircularProgressIndicator.adaptive())));
         }
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
+            return Scaffold(
+                body: Center(child: Text("Error: ${snapshot.error}")));
           }
         }
         return buidWidgetFunction(snapshot.data);

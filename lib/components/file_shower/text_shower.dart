@@ -1,6 +1,8 @@
 /*
 展示文本文件内容
 */
+import 'dart:ffi';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '/apis/gitee_api.dart';
 import 'base_shower.dart';
@@ -11,6 +13,18 @@ class TextShower extends BaseShower {
 
   @override
   Widget getBuildWidget(futureData) {
+    String text;
+    if (futureData.runtimeType == File) {
+      var file = futureData as File;
+      text = file.readAsStringSync();
+    } else if (futureData.runtimeType == String) {
+      text = futureData;
+    } else if (futureData.runtimeType == List<Uint8>) {
+      text = String.fromCharCodes(futureData);
+    } else {
+      text = "aaaa";
+    }
+
     return Scaffold(
         appBar: AppBar(title: Text(fileExplorEntranceArgument.showPath)),
         body: ListView(
@@ -19,7 +33,7 @@ class TextShower extends BaseShower {
               alignment: Alignment.topLeft,
               margin: const EdgeInsets.only(left: 14, top: 10),
               child: SelectableText(
-                futureData,
+                text,
                 style: const TextStyle(fontWeight: FontWeight.w600),
                 textAlign: TextAlign.left,
                 toolbarOptions: const ToolbarOptions(
@@ -37,7 +51,7 @@ class TextShower extends BaseShower {
 
   @override
   Future getFuture() {
-    return GiteeApi.getFileBlobsString(fileExplorEntranceArgument.owner,
+    return GiteeApi.getFileBlobs(fileExplorEntranceArgument.owner,
         fileExplorEntranceArgument.repo, fileExplorEntranceArgument.sha);
   }
 }
