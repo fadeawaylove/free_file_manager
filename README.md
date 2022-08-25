@@ -1,26 +1,20 @@
-# flutter_application_2
+# FreeFileManager
 
-A new Flutter project.
+## 介绍
 
-## Getting Started
+使用gitee作为远程文件仓库，提供桌面客户端进行文件管理，包括但不限于用作图床、云笔记等。
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
+## 其它
 代理设置：
+
 windows
+```shell
 set http_proxy=http://127.0.0.1:10809
 set https_proxy=http://127.0.0.1:10809
+```
 
 mac:
+```shell
 export http_proxy=http://127.0.0.1:10809
 export https_proxy=http://127.0.0.1:10809
->>>>>>> develop
+```
