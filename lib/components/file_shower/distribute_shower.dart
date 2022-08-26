@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:free_file_manager/apis/gitee_api.dart';
+import 'package:free_file_manager/components/file_shower/dir_shower.dart';
 import 'package:free_file_manager/components/file_shower/image_shower.dart';
 import 'package:free_file_manager/components/file_shower/md_shower.dart';
 import 'package:free_file_manager/components/file_shower/pdf_shower.dart';
@@ -39,6 +40,11 @@ class _DistributeShower extends BaseShower {
 */
 Widget getShowerFileWidget(FileExplorEntranceArgument fileInfo,
     {List<int>? headerBytes}) {
+  debugPrint(fileInfo.toString());
+  if (fileInfo.type == "tree") {
+    return DirShower(fileExplorEntranceArgument: fileInfo);
+  }
+
   // 1.人为后缀名指定
   List<String> mdFileSuffix = [".md", ".MD", ".mD", ".Md"];
   for (var element in mdFileSuffix) {

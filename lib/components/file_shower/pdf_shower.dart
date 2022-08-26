@@ -16,18 +16,18 @@ class PdfShower extends BaseShower {
         PdfController(document: PdfDocument.openFile(futureData.path));
 
     return Scaffold(
-        appBar: AppBar(title: Text(fileExplorEntranceArgument.showPath)),
+        appBar: AppBar(title: Text(fileExplorEntranceArgument.filePath)),
         body: PdfView(
-      scrollDirection: Axis.vertical,
-      controller: pdfController,
-      pageSnapping: false,
-      renderer: (PdfPage page) => page.render(
-        width: page.width * 2,
-        height: page.height * 2,
-        format: PdfPageImageFormat.jpeg,
-        backgroundColor: '#FFFFFF',
-      ),
-    ));
+          scrollDirection: Axis.vertical,
+          controller: pdfController,
+          pageSnapping: false,
+          renderer: (PdfPage page) => page.render(
+            width: page.width * 2,
+            height: page.height * 2,
+            format: PdfPageImageFormat.jpeg,
+            backgroundColor: '#FFFFFF',
+          ),
+        ));
   }
 
   @override

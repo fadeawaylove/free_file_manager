@@ -26,7 +26,7 @@ class TextShower extends BaseShower {
     }
 
     return Scaffold(
-        appBar: AppBar(title: Text(fileExplorEntranceArgument.showPath)),
+        appBar: AppBar(title: Text(fileExplorEntranceArgument.filePath)),
         body: ListView(
           children: [
             Container(

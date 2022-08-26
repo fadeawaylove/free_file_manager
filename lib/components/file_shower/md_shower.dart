@@ -14,7 +14,7 @@ class MarkDownShower extends BaseShower {
   @override
   Widget getBuildWidget(futureData) {
     return Scaffold(
-        appBar: AppBar(title: Text(fileExplorEntranceArgument.showPath)),
+        appBar: AppBar(title: Text(fileExplorEntranceArgument.filePath)),
         body: Markdown(
       data: futureData,
       selectable: true,

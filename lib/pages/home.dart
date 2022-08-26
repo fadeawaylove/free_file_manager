@@ -170,15 +170,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               minLeadingWidth: 6,
-              onTap: () => {
+              onTap: () {
+                // 到仓库页面
+                FileExplorEntranceArgument pageArgument =
+                    FileExplorEntranceArgument.fromRepoList(
+                        currentRepoOwner, currentRepoPath, repoType,
+                        filePath: "/", sha: "master", name: currentRepoName);
+                debugPrint(pageArgument.toString());
                 Navigator.pushNamed(context, FileExplorerPage.routeName,
-                    arguments: FileExplorEntranceArgument(
-                        repo: currentRepoPath,
-                        owner: currentRepoOwner,
-                        sha: "master",
-                        name: currentRepoName,
-                        showPath: currentRepoName,
-                        repoType: repoType))
+                    arguments: pageArgument);
               },
               title: Text("${currentRepo['human_name']}"),
             );

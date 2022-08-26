@@ -13,10 +13,10 @@ class ImageShower extends BaseShower {
   Widget getBuildWidget(dynamic futureData) {
     // 文件下载地址 https://gitee.com/fadeaway_dai/dog_read/raw/master/images/3.0/icon.jpg
     return Scaffold(
-        appBar: AppBar(title: Text(fileExplorEntranceArgument.showPath),
-        actions: [
-
-        ],),
+        appBar: AppBar(
+          title: Text(fileExplorEntranceArgument.filePath),
+          actions: [],
+        ),
         body: Container(
             height: double.infinity,
             alignment: Alignment.topCenter,

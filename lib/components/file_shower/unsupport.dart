@@ -35,7 +35,7 @@ class UnsupportFileShower extends StatelessWidget {
           } catch (e) {
             return Scaffold(
                 appBar:
-                    AppBar(title: Text(fileExplorEntranceArgument.showPath)),
+                    AppBar(title: Text(fileExplorEntranceArgument.filePath)),
                 body: Center(
                     child:
                         Text("尚未适配【${fileExplorEntranceArgument.name}】类型文件")));
