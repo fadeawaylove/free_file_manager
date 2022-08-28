@@ -131,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
           separatorBuilder: (context, index) {
             return const Divider(
               thickness: 1,
+              height: 0,
             );
           },
           primary: true,
@@ -175,8 +176,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 FileExplorEntranceArgument pageArgument =
                     FileExplorEntranceArgument.fromRepoList(
                         currentRepoOwner, currentRepoPath, repoType,
-                        filePath: "/", sha: "master", name: currentRepoName);
-                debugPrint(pageArgument.toString());
+                        filePath: "/",
+                        sha: "master",
+                        name: currentRepoName,
+                        recursive: 1);
                 Navigator.pushNamed(context, FileExplorerPage.routeName,
                     arguments: pageArgument);
               },
@@ -220,9 +223,74 @@ class _MyHomePageState extends State<MyHomePage> {
 
           return Scaffold(
               appBar: AppBar(
-                automaticallyImplyLeading: false,
                 title: const Text("FCF管理器"),
                 centerTitle: true,
+                leadingWidth: 400,
+                leading: Container(
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(
+                          left: 10,
+                        ),
+                        width: 220,
+                        height: 40,
+                        child: TextField(
+                          onEditingComplete: () {
+                            setListFutureNotifier(GiteeApi.getAllRepos(
+                                q: searchTextController.text));
+                          },
+                          textAlignVertical: TextAlignVertical.bottom,
+                          controller: searchTextController,
+                          autofocus: true,
+                          style: const TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                              suffixIcon: IconButton(
+                                  splashColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onPressed: () {
+                                    if (searchTextController.text == "") {
+                                      return;
+                                    }
+                                    searchTextController.clear();
+                                    setListFutureNotifier(
+                                        GiteeApi.getAllRepos());
+                                  },
+                                  icon: const Icon(Icons.clear)),
+                              border: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16))),
+                              hintText: "搜索仓库",
+                              hintStyle: const TextStyle(color: Colors.grey),
+                              filled: true,
+                              fillColor: Colors.white),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: 32,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              elevation: MaterialStateProperty.all(0),
+                              foregroundColor: MaterialStateProperty.all<Color>(
+                                  Colors.black54),
+                            ),
+                            onPressed: () {
+                              debugPrint(searchTextController.text);
+                              setListFutureNotifier(GiteeApi.getAllRepos(
+                                  q: searchTextController.text));
+                            },
+                            child: const Icon(Icons.search_rounded),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
                 actions: [
                   TextButton(
                       key: menuKey,
@@ -253,77 +321,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         ],
                       ))
                 ],
-                bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(50),
-                    child: Opacity(
-                      opacity: 1,
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 5),
-                        alignment: Alignment.center,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(left: 10),
-                              width: 220,
-                              height: 40,
-                              child: TextField(
-                                onEditingComplete: () {
-                                  setListFutureNotifier(GiteeApi.getAllRepos(
-                                      q: searchTextController.text));
-                                },
-                                textAlignVertical: TextAlignVertical.bottom,
-                                controller: searchTextController,
-                                autofocus: true,
-                                style: const TextStyle(color: Colors.black),
-                                decoration: InputDecoration(
-                                    suffixIcon: IconButton(
-                                        splashColor: Colors.transparent,
-                                        highlightColor: Colors.transparent,
-                                        onPressed: () {
-                                          if (searchTextController.text == "") {
-                                            return;
-                                          }
-                                          searchTextController.clear();
-                                          setListFutureNotifier(
-                                              GiteeApi.getAllRepos());
-                                        },
-                                        icon: const Icon(Icons.clear)),
-                                    border: const OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(16))),
-                                    hintText: "搜索仓库",
-                                    hintStyle:
-                                        const TextStyle(color: Colors.grey),
-                                    filled: true,
-                                    fillColor: Colors.white),
-                              ),
-                            ),
-                            Container(
-                              alignment: Alignment.center,
-                              child: SizedBox(
-                                height: 32,
-                                child: ElevatedButton(
-                                  style: ButtonStyle(
-                                    elevation: MaterialStateProperty.all(0),
-                                    foregroundColor:
-                                        MaterialStateProperty.all<Color>(
-                                            Colors.black54),
-                                  ),
-                                  onPressed: () {
-                                    debugPrint(searchTextController.text);
-                                    setListFutureNotifier(GiteeApi.getAllRepos(
-                                        q: searchTextController.text));
-                                  },
-                                  child: const Icon(Icons.search_rounded),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    )),
               ),
               body: ValueListenableBuilder<Future>(
                 builder: _buildListFuture,

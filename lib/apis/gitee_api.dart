@@ -91,7 +91,6 @@ class GiteeApi {
 
   static Future<Map> getRepoTree(String owner, String repo, String sha,
       {int recursive = 0}) async {
-    // 获取某个用户的公开仓库
     String accessToken = await SpUtil.getString("token");
     var url = Uri.https(host, "api/v5/repos/$owner/$repo/git/trees/$sha",
         {"access_token": accessToken, "recursive": "$recursive"});
