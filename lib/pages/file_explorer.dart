@@ -19,6 +19,18 @@ class FileExplorerPage extends StatefulWidget {
 }
 
 class _FileExplorerPageState extends State<FileExplorerPage> {
+  List<FileTreeItemModel> fileItemList = <FileTreeItemModel>[];
+  double treeWidth = 240;
+  Color verticalDividerColor = Colors.black26;
+
+  setDividerSelected() {
+    verticalDividerColor = Colors.black;
+  }
+
+  setDividerUnSelected() {
+    verticalDividerColor = Colors.black26;
+  }
+
   Widget fileTreeWidget = Scaffold(
       appBar: AppBar(),
       body: Center(
@@ -26,7 +38,7 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
               alignment: Alignment.center,
               child: const CircularProgressIndicator.adaptive())));
 
-  Future buildFileTreeWidget() async {
+  Future prepareRepoTreeData() async {
     FileExplorEntranceArgument fileInfo = widget.fileExplorEntranceArgument;
     Map res = await GiteeApi.getRepoTree(
         fileInfo.owner, fileInfo.repo, fileInfo.sha,
@@ -56,7 +68,10 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
       }
       currentDepth += 1;
     }
+    fileItemList = pathMap[0]!;
+  }
 
+  Future buildFileTreeWidget() async {
     setState(() {
       fileTreeWidget = Scaffold(
           appBar: AppBar(),
@@ -64,8 +79,9 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                  flex: 4,
+              Container(
+                  alignment: Alignment.centerLeft,
+                  width: treeWidth,
                   child: ListView.separated(
                     separatorBuilder: (context, index) {
                       return const Divider(
@@ -74,14 +90,52 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                         color: Colors.black12,
                       );
                     },
-                    itemCount: pathMap[0]!.length,
+                    itemCount: fileItemList.length,
                     itemBuilder: (context, index) {
                       return FileOneItemWidget(
-                          fileTreeItem: pathMap[0]![index]);
+                          fileTreeItem: fileItemList[index]);
                     },
                   )),
+              GestureDetector(
+                  onPanStart: (DragStartDetails details) {
+                    setDividerSelected();
+                    buildFileTreeWidget();
+                  },
+                  onPanEnd: (details) {
+                    setDividerUnSelected();
+                    buildFileTreeWidget();
+                  },
+                  onPanUpdate: (DragUpdateDetails details) {
+                    double nextWidth = treeWidth + details.delta.dx;
+                    setDividerSelected();
+                    if (nextWidth < 50) {
+                      return;
+                    }
+                    treeWidth = treeWidth + details.delta.dx;
+                    buildFileTreeWidget();
+                  },
+                  child: Container(
+                      alignment: Alignment.topCenter,
+                      width: 20,
+                      child: TextButton(
+                          style: ButtonStyle(
+                            overlayColor:
+                                MaterialStateProperty.all(Colors.transparent),
+                          ),
+                          onHover: (val) {
+                            if (val) {
+                              setDividerSelected();
+                            } else {
+                              setDividerUnSelected();
+                            }
+                            buildFileTreeWidget();
+                          },
+                          onPressed: () {},
+                          child: VerticalDivider(
+                            color: verticalDividerColor,
+                          )))),
               const Expanded(
-                flex: 10,
+                flex: 1,
                 child: Text("右边内容"),
               )
             ],
@@ -92,7 +146,7 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
   @override
   void initState() {
     super.initState();
-    buildFileTreeWidget();
+    prepareRepoTreeData().then((value) => buildFileTreeWidget());
   }
 
   @override
@@ -159,6 +213,7 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
             // showSelected();
           },
           minVerticalPadding: 0,
+          visualDensity: VisualDensity(vertical: -4),
           selected: selected,
           horizontalTitleGap: 4,
           dense: true,
@@ -180,6 +235,7 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
                 onTap: () {
                   showChildren();
                 },
+                visualDensity: VisualDensity(vertical: -4),
                 minVerticalPadding: 0,
                 selected: selected,
                 horizontalTitleGap: 4,
@@ -208,5 +264,246 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
                 ))
           ],
         ));
+  }
+}
+
+class ResizebleWidget extends StatefulWidget {
+  final Widget child;
+  ResizebleWidget({required this.child});
+
+  @override
+  _ResizebleWidgetState createState() => _ResizebleWidgetState();
+}
+
+const ballDiameter = 30.0;
+
+class _ResizebleWidgetState extends State<ResizebleWidget> {
+  double height = 400;
+  double width = 200;
+
+  double top = 0;
+  double left = 0;
+
+  void onDrag(double dx, double dy) {
+    var newHeight = height + dy;
+    var newWidth = width + dx;
+
+    setState(() {
+      height = newHeight > 0 ? newHeight : 0;
+      width = newWidth > 0 ? newWidth : 0;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        Positioned(
+          top: top,
+          left: left,
+          child: Container(
+            height: height,
+            width: width,
+            color: Colors.red[100],
+            child: widget.child,
+          ),
+        ),
+        // top left
+        Positioned(
+          top: top - ballDiameter / 2,
+          left: left - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              var mid = (dx + dy) / 2;
+              var newHeight = height - 2 * mid;
+              var newWidth = width - 2 * mid;
+
+              setState(() {
+                height = newHeight > 0 ? newHeight : 0;
+                width = newWidth > 0 ? newWidth : 0;
+                top = top + mid;
+                left = left + mid;
+              });
+            },
+          ),
+        ),
+        // top middle
+        Positioned(
+          top: top - ballDiameter / 2,
+          left: left + width / 2 - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              var newHeight = height - dy;
+
+              setState(() {
+                height = newHeight > 0 ? newHeight : 0;
+                top = top + dy;
+              });
+            },
+          ),
+        ),
+        // top right
+        Positioned(
+          top: top - ballDiameter / 2,
+          left: left + width - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              var mid = (dx + (dy * -1)) / 2;
+
+              var newHeight = height + 2 * mid;
+              var newWidth = width + 2 * mid;
+
+              setState(() {
+                height = newHeight > 0 ? newHeight : 0;
+                width = newWidth > 0 ? newWidth : 0;
+                top = top - mid;
+                left = left - mid;
+              });
+            },
+          ),
+        ),
+        // center right
+        Positioned(
+          top: top + height / 2 - ballDiameter / 2,
+          left: left + width - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              var newWidth = width + dx;
+
+              setState(() {
+                width = newWidth > 0 ? newWidth : 0;
+              });
+            },
+          ),
+        ),
+        // bottom right
+        Positioned(
+          top: top + height - ballDiameter / 2,
+          left: left + width - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              var mid = (dx + dy) / 2;
+
+              var newHeight = height + 2 * mid;
+              var newWidth = width + 2 * mid;
+
+              setState(() {
+                height = newHeight > 0 ? newHeight : 0;
+                width = newWidth > 0 ? newWidth : 0;
+                top = top - mid;
+                left = left - mid;
+              });
+            },
+          ),
+        ),
+        // bottom center
+        Positioned(
+          top: top + height - ballDiameter / 2,
+          left: left + width / 2 - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              var newHeight = height + dy;
+
+              setState(() {
+                height = newHeight > 0 ? newHeight : 0;
+              });
+            },
+          ),
+        ),
+        // bottom left
+        Positioned(
+          top: top + height - ballDiameter / 2,
+          left: left - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              var mid = ((dx * -1) + dy) / 2;
+
+              var newHeight = height + 2 * mid;
+              var newWidth = width + 2 * mid;
+
+              setState(() {
+                height = newHeight > 0 ? newHeight : 0;
+                width = newWidth > 0 ? newWidth : 0;
+                top = top - mid;
+                left = left - mid;
+              });
+            },
+          ),
+        ),
+        //left center
+        Positioned(
+          top: top + height / 2 - ballDiameter / 2,
+          left: left - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              var newWidth = width - dx;
+
+              setState(() {
+                width = newWidth > 0 ? newWidth : 0;
+                left = left + dx;
+              });
+            },
+          ),
+        ),
+        // center center
+        Positioned(
+          top: top + height / 2 - ballDiameter / 2,
+          left: left + width / 2 - ballDiameter / 2,
+          child: ManipulatingBall(
+            onDrag: (dx, dy) {
+              setState(() {
+                top = top + dy;
+                left = left + dx;
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ManipulatingBall extends StatefulWidget {
+  ManipulatingBall({Key? key, required this.onDrag});
+
+  final Function onDrag;
+
+  @override
+  _ManipulatingBallState createState() => _ManipulatingBallState();
+}
+
+class _ManipulatingBallState extends State<ManipulatingBall> {
+  double initX = 200;
+  double initY = 0;
+
+  _handleDrag(details) {
+    setState(() {
+      initX = details.globalPosition.dx;
+      initY = details.globalPosition.dy;
+    });
+  }
+
+  _handleUpdate(details) {
+    var dx = details.globalPosition.dx - initX;
+    var dy = details.globalPosition.dy - initY;
+    initX = details.globalPosition.dx;
+    initY = details.globalPosition.dy;
+    widget.onDrag(dx, dy);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanStart: _handleDrag,
+      onPanUpdate: _handleUpdate,
+      child: Container(
+        width: ballDiameter,
+        height: ballDiameter,
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.5),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
   }
 }
