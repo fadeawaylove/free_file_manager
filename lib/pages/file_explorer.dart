@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -71,6 +72,12 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
     fileItemList = pathMap[0]!;
   }
 
+  filterRepoTreeData(String searchValue) {
+    matchName() {}
+  }
+
+  TextEditingController searchTextController = TextEditingController();
+
   Future buildFileTreeWidget() async {
     setState(() {
       fileTreeWidget = Scaffold(
@@ -82,20 +89,67 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
               Container(
                   alignment: Alignment.centerLeft,
                   width: treeWidth,
-                  child: ListView.separated(
-                    separatorBuilder: (context, index) {
-                      return const Divider(
-                        thickness: 1,
-                        height: 0,
-                        color: Colors.black12,
-                      );
-                    },
-                    itemCount: fileItemList.length,
-                    itemBuilder: (context, index) {
-                      return FileOneItemWidget(
-                          fileTreeItem: fileItemList[index]);
-                    },
-                  )),
+                  child: Column(children: [
+                    Container(
+                      height: 30,
+                      child: TextField(
+                        cursorHeight: 20,
+                        // onEditingComplete: () {
+                        //   setListFutureNotifier(GiteeApi.getAllRepos(
+                        //       q: searchTextController.text));
+                        // },
+                        textAlignVertical: TextAlignVertical.bottom,
+                        controller: searchTextController,
+                        autofocus: true,
+                        style:
+                            const TextStyle(color: Colors.black, fontSize: 14),
+                        decoration: InputDecoration(
+                            suffixIcon: IconButton(
+                                splashColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onPressed: () {
+                                  if (searchTextController.text == "") {
+                                    return;
+                                  }
+                                  searchTextController.clear();
+                                  // setListFutureNotifier(
+                                  //     GiteeApi.getAllRepos());
+                                  buildFileTreeWidget();
+                                },
+                                icon: const Icon(
+                                  Icons.clear,
+                                  size: 16,
+                                )),
+                            border: const OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Colors.black12,
+                                    width: 20,
+                                    style: BorderStyle.solid),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(0))),
+                            hintText: "搜索",
+                            hintStyle: const TextStyle(color: Colors.grey),
+                            filled: true,
+                            fillColor: Colors.white),
+                      ),
+                    ),
+                    Expanded(
+                        flex: 1,
+                        child: ListView.separated(
+                          separatorBuilder: (context, index) {
+                            return const Divider(
+                              thickness: 1,
+                              height: 0,
+                              color: Colors.black12,
+                            );
+                          },
+                          itemCount: fileItemList.length,
+                          itemBuilder: (context, index) {
+                            return FileOneItemWidget(
+                                fileTreeItem: fileItemList[index]);
+                          },
+                        ))
+                  ])),
               GestureDetector(
                   onPanStart: (DragStartDetails details) {
                     setDividerSelected();
@@ -115,10 +169,17 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                     buildFileTreeWidget();
                   },
                   child: Container(
-                      alignment: Alignment.topCenter,
-                      width: 20,
+                      color: verticalDividerColor,
+                      alignment: Alignment.center,
+                      width: 2,
                       child: TextButton(
                           style: ButtonStyle(
+                            maximumSize: MaterialStateProperty.all(
+                                const Size.fromWidth(2)),
+                            minimumSize: MaterialStateProperty.all(
+                                const Size.fromWidth(2)),
+                            mouseCursor: MaterialStateProperty.all(
+                                SystemMouseCursors.resizeLeftRight),
                             overlayColor:
                                 MaterialStateProperty.all(Colors.transparent),
                           ),
@@ -131,9 +192,15 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                             buildFileTreeWidget();
                           },
                           onPressed: () {},
-                          child: VerticalDivider(
-                            color: verticalDividerColor,
-                          )))),
+                          child: Container()
+
+                          // VerticalDivider(
+                          //   width: 0,
+                          //   thickness: 1,
+                          //   color: verticalDividerColor,
+                          // )
+
+                          ))),
               const Expanded(
                 flex: 1,
                 child: Text("右边内容"),
