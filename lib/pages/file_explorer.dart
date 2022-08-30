@@ -261,6 +261,7 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
   bool selected = false;
 
   setChildren() {
+    children = <Widget>[];
     FileTreeItemModel fileTreeItem = widget.fileTreeItem;
     for (var x in fileTreeItem.children) {
       children.add(FileOneItemWidget(fileTreeItem: x));
