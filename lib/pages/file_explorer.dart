@@ -23,13 +23,20 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
   List<FileTreeItemModel> fileItemList = <FileTreeItemModel>[];
   double treeWidth = 240;
   Color verticalDividerColor = Colors.black26;
+  double dividerWidth = 2;
+  List<FileTreeItemModel> searchResult = <FileTreeItemModel>[];
+  late List originTreeData;
+
+  TextEditingController searchTextController = TextEditingController();
 
   setDividerSelected() {
-    verticalDividerColor = Colors.black;
+    verticalDividerColor = Colors.black54;
+    dividerWidth = 4;
   }
 
   setDividerUnSelected() {
     verticalDividerColor = Colors.black26;
+    dividerWidth = 2;
   }
 
   Widget fileTreeWidget = Scaffold(
@@ -44,11 +51,11 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
     Map res = await GiteeApi.getRepoTree(
         fileInfo.owner, fileInfo.repo, fileInfo.sha,
         recursive: 1);
-    List treeData = res["tree"];
+    originTreeData = res["tree"];
     Map<int, List<FileTreeItemModel>> pathMap = {};
 
     int maxDepth = 0;
-    for (Map<String, dynamic> n in treeData) {
+    for (Map<String, dynamic> n in originTreeData) {
       FileTreeItemModel fileNode = FileTreeItemModel.fromMap(n);
       int depth = "/".allMatches(fileNode.path).length;
       maxDepth = max(maxDepth, depth);
@@ -73,10 +80,23 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
   }
 
   filterRepoTreeData(String searchValue) {
-    matchName() {}
-  }
+    searchResult = <FileTreeItemModel>[];
+    matchName(FileTreeItemModel node) {
+      if (node.name.contains(searchValue)) {
+        searchResult.add(node);
+      }
+      if (node.children.isNotEmpty) {
+        for (var n in node.children) {
+          matchName(n);
+        }
+      }
+    }
 
-  TextEditingController searchTextController = TextEditingController();
+    for (var node in fileItemList) {
+      matchName(node);
+    }
+    debugPrint(searchResult.toString());
+  }
 
   Future buildFileTreeWidget() async {
     setState(() {
@@ -91,13 +111,20 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                   width: treeWidth,
                   child: Column(children: [
                     Container(
+                      alignment: Alignment.topLeft,
                       height: 30,
                       child: TextField(
                         cursorHeight: 20,
-                        // onEditingComplete: () {
-                        //   setListFutureNotifier(GiteeApi.getAllRepos(
-                        //       q: searchTextController.text));
-                        // },
+                        onEditingComplete: () {
+                          filterRepoTreeData(searchTextController.text);
+                          buildFileTreeWidget();
+                        },
+                        onChanged: (value) {
+                          if (value.isNotEmpty) {
+                            filterRepoTreeData(value);
+                          }
+                          buildFileTreeWidget();
+                        },
                         textAlignVertical: TextAlignVertical.bottom,
                         controller: searchTextController,
                         autofocus: true,
@@ -112,8 +139,6 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                                     return;
                                   }
                                   searchTextController.clear();
-                                  // setListFutureNotifier(
-                                  //     GiteeApi.getAllRepos());
                                   buildFileTreeWidget();
                                 },
                                 icon: const Icon(
@@ -143,10 +168,14 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                               color: Colors.black12,
                             );
                           },
-                          itemCount: fileItemList.length,
+                          itemCount: searchTextController.text.isEmpty
+                              ? fileItemList.length
+                              : searchResult.length,
                           itemBuilder: (context, index) {
                             return FileOneItemWidget(
-                                fileTreeItem: fileItemList[index]);
+                                fileTreeItem: searchTextController.text.isEmpty
+                                    ? fileItemList[index]
+                                    : searchResult[index]);
                           },
                         ))
                   ])),
@@ -171,13 +200,13 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                   child: Container(
                       color: verticalDividerColor,
                       alignment: Alignment.center,
-                      width: 2,
+                      width: dividerWidth,
                       child: TextButton(
                           style: ButtonStyle(
                             maximumSize: MaterialStateProperty.all(
-                                const Size.fromWidth(2)),
+                                Size.fromWidth(dividerWidth)),
                             minimumSize: MaterialStateProperty.all(
-                                const Size.fromWidth(2)),
+                                Size.fromWidth(dividerWidth)),
                             mouseCursor: MaterialStateProperty.all(
                                 SystemMouseCursors.resizeLeftRight),
                             overlayColor:
@@ -192,15 +221,7 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
                             buildFileTreeWidget();
                           },
                           onPressed: () {},
-                          child: Container()
-
-                          // VerticalDivider(
-                          //   width: 0,
-                          //   thickness: 1,
-                          //   color: verticalDividerColor,
-                          // )
-
-                          ))),
+                          child: Container()))),
               const Expanded(
                 flex: 1,
                 child: Text("右边内容"),
@@ -239,10 +260,8 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
   bool childrenShowed = false;
   bool selected = false;
 
-  List<Widget> getChildren() {
+  setChildren() {
     FileTreeItemModel fileTreeItem = widget.fileTreeItem;
-
-    List<Widget> children = [];
     for (var x in fileTreeItem.children) {
       children.add(FileOneItemWidget(fileTreeItem: x));
 
@@ -255,11 +274,11 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
         ));
       }
     }
-    return children;
   }
 
   showChildren() {
     setState(() {
+      setChildren();
       childrenShowed = !childrenShowed;
       selected = !selected;
     });
@@ -268,7 +287,7 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
   @override
   void initState() {
     super.initState();
-    children = getChildren();
+    setChildren();
   }
 
   @override
@@ -280,7 +299,7 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
             // showSelected();
           },
           minVerticalPadding: 0,
-          visualDensity: VisualDensity(vertical: -4),
+          visualDensity: const VisualDensity(vertical: -4),
           selected: selected,
           horizontalTitleGap: 4,
           dense: true,
@@ -302,7 +321,7 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
                 onTap: () {
                   showChildren();
                 },
-                visualDensity: VisualDensity(vertical: -4),
+                visualDensity: const VisualDensity(vertical: -4),
                 minVerticalPadding: 0,
                 selected: selected,
                 horizontalTitleGap: 4,
@@ -331,246 +350,5 @@ class _FileOneItemWidgetState extends State<FileOneItemWidget> {
                 ))
           ],
         ));
-  }
-}
-
-class ResizebleWidget extends StatefulWidget {
-  final Widget child;
-  ResizebleWidget({required this.child});
-
-  @override
-  _ResizebleWidgetState createState() => _ResizebleWidgetState();
-}
-
-const ballDiameter = 30.0;
-
-class _ResizebleWidgetState extends State<ResizebleWidget> {
-  double height = 400;
-  double width = 200;
-
-  double top = 0;
-  double left = 0;
-
-  void onDrag(double dx, double dy) {
-    var newHeight = height + dy;
-    var newWidth = width + dx;
-
-    setState(() {
-      height = newHeight > 0 ? newHeight : 0;
-      width = newWidth > 0 ? newWidth : 0;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        Positioned(
-          top: top,
-          left: left,
-          child: Container(
-            height: height,
-            width: width,
-            color: Colors.red[100],
-            child: widget.child,
-          ),
-        ),
-        // top left
-        Positioned(
-          top: top - ballDiameter / 2,
-          left: left - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              var mid = (dx + dy) / 2;
-              var newHeight = height - 2 * mid;
-              var newWidth = width - 2 * mid;
-
-              setState(() {
-                height = newHeight > 0 ? newHeight : 0;
-                width = newWidth > 0 ? newWidth : 0;
-                top = top + mid;
-                left = left + mid;
-              });
-            },
-          ),
-        ),
-        // top middle
-        Positioned(
-          top: top - ballDiameter / 2,
-          left: left + width / 2 - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              var newHeight = height - dy;
-
-              setState(() {
-                height = newHeight > 0 ? newHeight : 0;
-                top = top + dy;
-              });
-            },
-          ),
-        ),
-        // top right
-        Positioned(
-          top: top - ballDiameter / 2,
-          left: left + width - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              var mid = (dx + (dy * -1)) / 2;
-
-              var newHeight = height + 2 * mid;
-              var newWidth = width + 2 * mid;
-
-              setState(() {
-                height = newHeight > 0 ? newHeight : 0;
-                width = newWidth > 0 ? newWidth : 0;
-                top = top - mid;
-                left = left - mid;
-              });
-            },
-          ),
-        ),
-        // center right
-        Positioned(
-          top: top + height / 2 - ballDiameter / 2,
-          left: left + width - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              var newWidth = width + dx;
-
-              setState(() {
-                width = newWidth > 0 ? newWidth : 0;
-              });
-            },
-          ),
-        ),
-        // bottom right
-        Positioned(
-          top: top + height - ballDiameter / 2,
-          left: left + width - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              var mid = (dx + dy) / 2;
-
-              var newHeight = height + 2 * mid;
-              var newWidth = width + 2 * mid;
-
-              setState(() {
-                height = newHeight > 0 ? newHeight : 0;
-                width = newWidth > 0 ? newWidth : 0;
-                top = top - mid;
-                left = left - mid;
-              });
-            },
-          ),
-        ),
-        // bottom center
-        Positioned(
-          top: top + height - ballDiameter / 2,
-          left: left + width / 2 - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              var newHeight = height + dy;
-
-              setState(() {
-                height = newHeight > 0 ? newHeight : 0;
-              });
-            },
-          ),
-        ),
-        // bottom left
-        Positioned(
-          top: top + height - ballDiameter / 2,
-          left: left - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              var mid = ((dx * -1) + dy) / 2;
-
-              var newHeight = height + 2 * mid;
-              var newWidth = width + 2 * mid;
-
-              setState(() {
-                height = newHeight > 0 ? newHeight : 0;
-                width = newWidth > 0 ? newWidth : 0;
-                top = top - mid;
-                left = left - mid;
-              });
-            },
-          ),
-        ),
-        //left center
-        Positioned(
-          top: top + height / 2 - ballDiameter / 2,
-          left: left - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              var newWidth = width - dx;
-
-              setState(() {
-                width = newWidth > 0 ? newWidth : 0;
-                left = left + dx;
-              });
-            },
-          ),
-        ),
-        // center center
-        Positioned(
-          top: top + height / 2 - ballDiameter / 2,
-          left: left + width / 2 - ballDiameter / 2,
-          child: ManipulatingBall(
-            onDrag: (dx, dy) {
-              setState(() {
-                top = top + dy;
-                left = left + dx;
-              });
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class ManipulatingBall extends StatefulWidget {
-  ManipulatingBall({Key? key, required this.onDrag});
-
-  final Function onDrag;
-
-  @override
-  _ManipulatingBallState createState() => _ManipulatingBallState();
-}
-
-class _ManipulatingBallState extends State<ManipulatingBall> {
-  double initX = 200;
-  double initY = 0;
-
-  _handleDrag(details) {
-    setState(() {
-      initX = details.globalPosition.dx;
-      initY = details.globalPosition.dy;
-    });
-  }
-
-  _handleUpdate(details) {
-    var dx = details.globalPosition.dx - initX;
-    var dy = details.globalPosition.dy - initY;
-    initX = details.globalPosition.dx;
-    initY = details.globalPosition.dy;
-    widget.onDrag(dx, dy);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanStart: _handleDrag,
-      onPanUpdate: _handleUpdate,
-      child: Container(
-        width: ballDiameter,
-        height: ballDiameter,
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.5),
-          shape: BoxShape.circle,
-        ),
-      ),
-    );
   }
 }
